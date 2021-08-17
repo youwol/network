@@ -1,4 +1,5 @@
-import { child$, VirtualDOM } from "@youwol/flux-view";
+import { attr$, child$, VirtualDOM } from "@youwol/flux-view";
+import { tap } from "rxjs/operators";
 import { AppState } from "../state";
 
 
@@ -11,12 +12,16 @@ export function sideBarView(appState: AppState): VirtualDOM{
                 appState.groups$,
                 (groups) => {
                     return { 
-                        class:'fv-text-primary',
+                        class: 'fv-text-primary',
                         children: groups
-                        .filter( grp => grp.path != 'private')
                         .map( grp => {
                             return {
-                                class:'d-flex align-items-center',
+                                class: attr$( 
+                                    appState.selectedGroup$,
+                                    (selected) => grp.id == selected.id ? 'fv-text-focus': 'fv-text-primary',
+                                    {wrapper: (d) => d + " rounded px-2 d-flex align-items-center fv-pointer fv-hover-bg-background"}
+                                ),
+                                onclick: (ev) => appState.selectGroup(grp.id),
                                 children:[
                                     {
                                         class:'fas fa-users pr-2'
