@@ -1,4 +1,5 @@
 import { render } from "@youwol/flux-view"
+import { GroupResponse } from "@youwol/flux-youwol-essentials"
 import { ExpandableGroup } from "@youwol/fv-group"
 import { BehaviorSubject, Subject } from "rxjs"
 import { fluxAppView } from "./attach-flux.view"
@@ -10,18 +11,18 @@ export enum RenderMode{
     View = 'View'
 }
 
-export class State{
+export class NewPostState{
 
     insertedEmojis$ = new Subject<string>()
     insertedFluxApp$ = new Subject<any>()
     renderMode$ = new BehaviorSubject<RenderMode>(RenderMode.Template)
     
-    constructor(){
+    constructor(public readonly user, public readonly group: GroupResponse){
     }
 
-    toggleRender(){
-        let nodeTemplate = document.getElementById("template-div") as HTMLDivElement
+    getContent(){
 
+        let nodeTemplate = document.getElementById("template-div") as HTMLDivElement
         let templateStr = ""
 
         Array.from(nodeTemplate.children).forEach( child => {
@@ -33,7 +34,12 @@ export class State{
                 templateStr += "\n"+child['innerText']
             }
         })
-        
+        return templateStr
+    }
+
+    toggleRender(){
+        let templateStr = this.getContent()
+
         let nodeView =  document.getElementById("render-div")
         nodeView.innerHTML = window['marked'](templateStr);  
         window['MathJax']
@@ -50,32 +56,6 @@ export class State{
                 console.log(node, params, code)
 
                 let view = fluxAppView(params.name, params.rawId, params.minWidth, params.aspectRatio)
-                /*new ExpandableGroup.View({
-                    state: new ExpandableGroup.State(params.name),
-                    class: "d-flex flex-column",
-                    headerView: ExpandableGroup.defaultHeaderView,
-                    contentView: (state) => ({
-                        class:'w-100  overflow-auto',
-                        children:[
-                            {   
-                                class:'fv-bg-background',
-                                style:{ minWidth:params.minWidth, aspectRatio: params.aspectRatio, position:'relative'},
-                                children: [
-                                    {
-                                        tag: 'iframe',
-                                        style:{
-                                            position: 'absolute',
-                                        },
-                                        title: '',
-                                        width: '100%',
-                                        height: '100%',
-                                        src: `/ui/flux-runner/?id=${params.rawId}`
-                                    }
-                                ]
-                            }
-                        ]
-                    })
-                } as any )*/
                 let div = render(view)
                 node.replaceWith(div)
             })

@@ -1,13 +1,15 @@
-import { attr$, child$, HTMLElement$, VirtualDOM } from "@youwol/flux-view";
-import { BehaviorSubject, Subject } from "rxjs";
+import { attr$, child$, VirtualDOM } from "@youwol/flux-view";
+import { GroupResponse } from "@youwol/flux-youwol-essentials";
+import { Subject } from "rxjs";
+import { Client } from "../../client";
+import { AppState } from "../../state";
 import { attachFileExpandedView, attachFileIconView, fluxAppView } from "./attach-flux.view";
 import { emojisExpandedView, emojisIconView } from "./emojis.view";
-import { ActionFooter, RenderMode, State } from "./models";
+import { ActionFooter, RenderMode, NewPostState } from "./models";
 import { templateView } from "./text-area.view";
 
 
-
-export function actionsHeaderView(state: State): VirtualDOM {
+export function actionsHeaderView(state: NewPostState): VirtualDOM {
 
     return {
         class:' d-flex align-items-center',
@@ -26,17 +28,27 @@ export function actionsHeaderView(state: State): VirtualDOM {
                  }
             },
             {
-                tag:'i',
-                class: 'fab fa-2x fa-telegram-plane fv-pointer rounded fv-text-success',
-                onclick: () => {
-                   state.toggleRender()         
-                }
+                class:'ml-auto',
+                children:[
+                    {
+                        tag:'i',
+                        class: 'fab fa-2x fa-telegram-plane fv-pointer rounded fv-text-success',
+                        onclick: () => {
+                           Client.post({
+                               time: Date.now(),
+                               author: state.user,
+                               groupId: state.group.id,
+                               content: state.getContent()
+                           })      
+                        }
+                    }
+                ]
             }
         ]
     }
 }
 
-export function actionsFooterView(state: State): VirtualDOM {
+export function actionsFooterView(state: NewPostState): VirtualDOM {
 
     let toggledAction$ = new Subject()
 
@@ -78,12 +90,12 @@ export function actionsFooterView(state: State): VirtualDOM {
 }
 
 
-export function writerMessageView(): VirtualDOM {
+export function newPostView(group: GroupResponse, userId: string): VirtualDOM {
 
-    let state = new State()
+    let state = new NewPostState(userId, group)
 
     return {
-        class:'overflow-auto',
+        class:'overflow-auto px-5 pt-2',
         children: [
             actionsHeaderView(state),
             {
