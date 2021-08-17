@@ -51,6 +51,8 @@ module.exports = {
           "@youwol/flux-core": "window['@youwol/flux-core']",
           "@youwol/flux-view": "window['@youwol/flux-view']",
           "@youwol/flux-files": "window['@youwol/flux-files']",
+          "@youwol/fv-group": "window['@youwol/fv-group']",
+          "@youwol/fv-input": "window['@youwol/fv-input']",
           "@youwol/flux-youwol-essentials": "window['@youwol/flux-youwol-essentials']",
         }
       ],

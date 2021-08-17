@@ -23,6 +23,7 @@
         "@youwol/flux-files": "0.x",
         "@youwol/flux-youwol-essentials": "0.x",
         "@youwol/fv-group": "0.x",
+        "@youwol/fv-input": "0.x",
         "lodash": "4.x",
         "reflect-metadata": "0.x",
         "rxjs": "6.x"
@@ -59,6 +60,7 @@
             "@youwol/flux-files": "0.x",
             "@youwol/flux-youwol-essentials": "0.x",
             "@youwol/fv-group": "0.x",
+            "@youwol/fv-input": "0.x",
             "lodash": "4.x",
             "rxjs": "6.x"
         }
