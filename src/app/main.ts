@@ -16,12 +16,14 @@ await Promise.all([
     fetchBundles({
         'lodash': '4.17.15',
         "grapes": '0.16.2',
+        "rxjs": '6.5.5',
         "@youwol/flux-core": 'latest',
         '@youwol/flux-youwol-essentials': 'latest',
         "@youwol/fv-group": 'latest',
         '@youwol/flux-view': 'latest',
-        '@youwol/flux-files': 'latest',
-        "rxjs": '6.5.5',
+        '@youwol/flux-files': 'latest',        
+        'mathjax': 'latest',        
+        'marked': 'latest'
         },
         window
     )
