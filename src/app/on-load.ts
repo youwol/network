@@ -2,13 +2,11 @@ require('./style.css');
 
 import { render } from '@youwol/flux-view';
 import { createYouwolBanner } from './views/banner.view';
+import { AppState } from './state';
 import { sideBarView } from './views/sidebar.view';
 import { wallView } from './views/wall.view';
 
-
-class State{
-}
-
+let appState = new AppState()
 
 let vDOM = {
     class:'fv-bg-background d-flex flex-column h-100',
@@ -17,8 +15,8 @@ let vDOM = {
         {
             class:'d-flex flex-grow-1',
             children:[
-                sideBarView(),
-                wallView()
+                sideBarView(appState),
+                wallView(appState)
             ]
         }
     ]

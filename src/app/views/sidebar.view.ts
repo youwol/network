@@ -1,18 +1,18 @@
 import { child$, VirtualDOM } from "@youwol/flux-view";
-import { AssetsBrowserClient } from "../assets-browser.client";
+import { AppState } from "../state";
 
 
-export function sideBarView(): VirtualDOM{
+export function sideBarView(appState: AppState): VirtualDOM{
 
     return {
         class:'fv-bg-background-alt p-3 flex-shrink-0',
         children:[
             child$(
-                AssetsBrowserClient.getGroups$(),
-                (resp) => {
+                appState.groups$,
+                (groups) => {
                     return { 
                         class:'fv-text-primary',
-                        children: resp.groups
+                        children: groups
                         .filter( grp => grp.path != 'private')
                         .map( grp => {
                             return {
