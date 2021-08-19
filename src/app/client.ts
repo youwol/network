@@ -33,6 +33,7 @@ export interface ProfileDocument{
 
 export class Client{
 
+    static FETCH_COUNT = 5
     static storage = localStorage.getItem('network') 
         ? JSON.parse(localStorage.getItem('network')):
         {
@@ -44,6 +45,7 @@ export class Client{
         };
 
     static posts$ : {[key:string]: ReplaySubject<PostDocument[]>} = {}
+    static lastTime : {[key:string]: number} = {}
     static emoji$ : {[key:string]: ReplaySubject<EmojiDocument[]>} = {}
     static comment$ : {[key:string]: ReplaySubject<CommentDocument[]>} = {}
     static profileSettings$ : {[key:string]: ReplaySubject<ProfileDocument>} = {}
@@ -81,7 +83,7 @@ export class Client{
         this.profileSettings$[groupId].next({groupId, title, icon, coverApp})
     }
 
-    static getPosts$(groupId): Observable<Array<PostDocument>>{
+    static getPosts$(groupId: string): Observable<Array<PostDocument>>{
 
         if(!this.posts$[groupId]){
             this.posts$[groupId] = new ReplaySubject<PostDocument[]>()
@@ -89,9 +91,27 @@ export class Client{
             let posts = this.storage.posts.filter( (post: PostDocument) => {
                 return post.groupId == groupId
             })
-            this.posts$[groupId].next(posts)
+            if( posts.length == 0)
+                return this.posts$[groupId]
+            posts.sort( (lhs, rhs) => lhs.time > rhs.time)
+            posts = posts.slice(0,Client.FETCH_COUNT)
+            this.lastTime[groupId] = _.last(posts).time
+            this.posts$[groupId].next(posts.slice(0,Client.FETCH_COUNT))
         }
         return this.posts$[groupId]
+    }
+
+    static getMorePosts(groupId: string) {
+
+        let posts = this.storage.posts.filter( (post: PostDocument) => {
+            return post.groupId == groupId && post.time < this.lastTime[groupId]
+        })
+        posts.sort( (lhs, rhs) => lhs.time > rhs.time)
+        posts = posts.slice(0,Client.FETCH_COUNT)
+        if(posts.length==0)
+            return 
+        this.lastTime[groupId] = _.last(posts).time
+        this.posts$[groupId].next(posts.slice(0,Client.FETCH_COUNT))
     }
 
     static post({author,groupId,content}){

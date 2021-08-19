@@ -19,7 +19,12 @@ export function hRuleView(): VirtualDOM {
 export function wallView(appState: AppState): VirtualDOM {
 
     return {
-        class: 'flex-grow-1 overflow-auto fv-bg-background',
+        class: 'flex-grow-1 overflow-auto fv-bg-background',onscroll:(ev) => {
+            let elem = ev.target
+            if (elem.scrollTop >= (elem.scrollHeight - elem.parentNode.clientHeight - 50)) {
+                Client.getMorePosts(grp.id)
+            }
+        },
         style:{width:'0px'},
         children:[
             child$(
