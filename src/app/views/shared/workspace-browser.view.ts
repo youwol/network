@@ -108,7 +108,7 @@ export function popupWorkspaceBrowserModal(file$: Subject<Interfaces.File>) {
             return workspaceBrowserView(file$)
         },
         connectedCallback: (elem) => {
-            let sub = merge(modalState.cancel$, modalState.ok$ ).subscribe( () =>{
+            let sub = merge(modalState.cancel$, modalState.ok$, file$ ).subscribe( () =>{
                 modalDiv.remove()
                 file$.complete()
             })
