@@ -24,10 +24,10 @@ export function sideBarView(appState: AppState): VirtualDOM{
                                 onclick: (ev) => appState.selectGroup(grp.id),
                                 children:[
                                     {
-                                        class:'fas fa-users pr-2'
+                                        class: grp.path == 'private' ? 'fas fa-user pr-2' :'fas fa-users pr-2'
                                     },
                                     {
-                                        innerText: grp.path
+                                        innerText: grp.path == 'private' ? 'myself' : grp.path
                                     }
                                 ]
                             }
