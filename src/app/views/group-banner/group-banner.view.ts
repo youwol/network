@@ -1,11 +1,13 @@
 import { Interfaces } from "@youwol/flux-files"
-import { attr$, child$, VirtualDOM } from "@youwol/flux-view"
+import { attr$, child$, HTMLElement$, VirtualDOM } from "@youwol/flux-view"
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
-import { ReplaySubject, Subject } from "rxjs"
+import { ExpandableGroup } from "@youwol/fv-group"
+import { BehaviorSubject, ReplaySubject, Subject } from "rxjs"
 import { filter, map } from "rxjs/operators"
-import { Client } from "../../client"
+import { Client, ProfileDocument } from "../../client"
 import { AppState } from "../../state"
-import { popupWorkspaceBrowserModal, workspaceBrowserView } from "../shared/workspace-browser.view"
+import { popupEmojisBrowserModal } from "../shared/emojis-browser.view"
+import { popupWorkspaceBrowserModal } from "../shared/workspace-browser.view"
 
 
 

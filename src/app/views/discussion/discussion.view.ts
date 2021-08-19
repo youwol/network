@@ -1,6 +1,4 @@
-import { child$, childrenAppendOnly$ } from "@youwol/flux-view"
-import { ExpandableGroup } from "@youwol/fv-group"
-import { combineLatest } from "rxjs"
+import { childrenAppendOnly$ } from "@youwol/flux-view"
 import { Client, PostDocument } from "../../client"
 import { AppState } from "../../state"
 import { NewPostState } from "../new-post/models"

@@ -1,5 +1,5 @@
-import { child$, VirtualDOM } from "@youwol/flux-view";
-import { combineLatest } from "rxjs";
+import { VirtualDOM } from "@youwol/flux-view";
+import { Client } from "../client";
 import { AppState } from "../state";
 import { groupBannerView } from "./group-banner/group-banner.view";
 import { NewPostState } from "./new-post/models";

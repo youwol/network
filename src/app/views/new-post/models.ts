@@ -1,7 +1,5 @@
 import { uuidv4 } from "@youwol/flux-core"
 import { render } from "@youwol/flux-view"
-import { GroupResponse } from "@youwol/flux-youwol-essentials"
-import { ExpandableGroup } from "@youwol/fv-group"
 import { BehaviorSubject, Subject } from "rxjs"
 import { Client } from "../../client"
 import { fluxAppView } from "./attach-flux.view"

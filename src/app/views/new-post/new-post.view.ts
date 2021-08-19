@@ -1,13 +1,9 @@
 import { attr$, child$, VirtualDOM } from "@youwol/flux-view";
-import { GroupResponse } from "@youwol/flux-youwol-essentials";
 import { Subject } from "rxjs";
-import { Client } from "../../client";
-import { AppState } from "../../state";
-import { attachFileExpandedView, attachFileIconView, fluxAppView } from "./attach-flux.view";
+import { attachFileExpandedView, attachFileIconView } from "./attach-flux.view";
 import { emojisExpandedView, emojisIconView } from "../shared/emojis-browser.view";
 import { ActionFooter, RenderMode, NewPostState } from "./models";
 import { templateView } from "./text-area.view";
-import { uuidv4 } from "@youwol/flux-core";
 
 
 export function actionsHeaderView(state: NewPostState): VirtualDOM {

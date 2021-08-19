@@ -1,9 +1,6 @@
 import { attr$, child$, VirtualDOM } from "@youwol/flux-view"
-import { ImmutableTree } from "@youwol/fv-tree"
-import { Interfaces, ModuleExplorer } from "@youwol/flux-files"
-import { AssetsGatewayClient, Drive } from "@youwol/flux-youwol-essentials"
-import { BehaviorSubject, combineLatest, Observable, ReplaySubject, Subject } from "rxjs"
-import { filter, map } from "rxjs/operators"
+import { Interfaces } from "@youwol/flux-files"
+import { BehaviorSubject, combineLatest, Subject } from "rxjs"
 import { ExpandableGroup } from "@youwol/fv-group"
 import { workspaceBrowserView } from "../shared/workspace-browser.view"
 

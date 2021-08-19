@@ -1,12 +1,10 @@
 import { child$, children$, childrenAppendOnly$, HTMLElement$, render, VirtualDOM } from "@youwol/flux-view"
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
-import { ExpandableGroup } from "@youwol/fv-group";
 import { Subject } from "rxjs";
 import { filter, scan } from "rxjs/operators";
-import { Client, CommentDocument, EmojiDocument, PostDocument } from "../../client"
+import { Client, EmojiDocument, PostDocument, ProfileDocument } from "../../client"
 import { AppState } from "../../state";
 import { fluxAppView } from "../new-post/attach-flux.view";
-import { newPostView } from "../new-post/new-post.view";
 import { popupEmojisBrowserModal } from "../shared/emojis-browser.view";
 
 
