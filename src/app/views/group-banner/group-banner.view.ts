@@ -39,9 +39,7 @@ export enum ActionFooter {
 
 export function actionsFooterView(bannerState: BannerState): VirtualDOM {
 
-    let toggledAction$ = new Subject()
-
-    let togglingIconFactory = {
+    let iconFactory = {
         [ActionFooter.AttachFile]:{
             class:'d-flex align-items-center mx-2 fv-hover-bg-background fv-pointer rounded p-2',
             children:[
@@ -53,19 +51,23 @@ export function actionsFooterView(bannerState: BannerState): VirtualDOM {
                 }
             ]
         },
-        [ActionFooter.BuildApp]:{
-            class:'d-flex align-items-center mx-2 fv-hover-bg-background fv-pointer  rounded p-2',
-            children:[
-                {
-                    tag: 'i',
-                    class: 'fv-pointer rounded m-1 fas fa-wrench'
-                },{
-                    innerText:'build app.'
-                }
-            ]
-        },
+        [ActionFooter.BuildApp]: {
+            children:[child$(
+            bannerState.coverApp$,
+            () => ({
+                class:'d-flex align-items-center mx-2 fv-hover-bg-background fv-pointer  rounded p-2',
+                children:[
+                    {
+                        tag: 'i',
+                        class: 'fv-pointer rounded m-1 fas fa-wrench'
+                    },{
+                        innerText:'build app.'
+                    }
+                ]
+            })
+        )]},
     }
-    let expandedFactory = {
+    let actionsFactory = {
         [ActionFooter.AttachFile]: () => {
             let selectedFile$ = new Subject<Interfaces.File>()
             popupWorkspaceBrowserModal(selectedFile$)
@@ -86,8 +88,8 @@ export function actionsFooterView(bannerState: BannerState): VirtualDOM {
                 class: 'd-flex align-items-center',
                 children: [ActionFooter.AttachFile, ActionFooter.BuildApp].map( (action) => {
                     return {
-                        ... togglingIconFactory[action], 
-                        ...{ onclick: (ev) => expandedFactory[action]() }}
+                        ... iconFactory[action], 
+                        ...{ onclick: (ev) => actionsFactory[action]() }}
                 })
             }
         ]
