@@ -18,7 +18,7 @@ export class NewPostState{
     renderMode$ = new BehaviorSubject<RenderMode>(RenderMode.Template)
     templateDivId: string
     renderDivId : string
-    
+
     constructor(
         public readonly user, 
         public readonly groupId: string
@@ -78,7 +78,9 @@ export class NewPostState{
     }
 
     post(postData : { author, groupId, content}){
-        Client.post( { ...postData, ...{time: Date.now()} }) 
+        Client.post( postData ) 
+        document.getElementById(this.templateDivId).innerHTML = ""
+        this.toggleTemplate()
     }
 }
 
