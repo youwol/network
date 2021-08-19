@@ -1,7 +1,7 @@
 import { uuidv4 } from "@youwol/flux-core";
-import { Interface } from "node:readline";
-import { Observable, of, ReplaySubject, Subject } from "rxjs";
-
+import { Observable, ReplaySubject } from "rxjs";
+import { animalsEmojiList } from "./views/shared/emojis-browser.view";
+import * as _ from 'lodash'
 
 
 export interface PostDocument{
@@ -22,6 +22,14 @@ export interface EmojiDocument{
     userId: string
 }
 
+export interface ProfileDocument{
+    groupId: string
+    title: string
+    icon: string
+    coverApp: string
+}
+
+
 
 export class Client{
 
@@ -31,23 +39,46 @@ export class Client{
             covers: {},
             posts: [],
             emojis: [],
-            comments: []
+            comments: [],
+            profiles: []
         };
 
     static posts$ : {[key:string]: ReplaySubject<PostDocument[]>} = {}
     static emoji$ : {[key:string]: ReplaySubject<EmojiDocument[]>} = {}
     static comment$ : {[key:string]: ReplaySubject<CommentDocument[]>} = {}
+    static profileSettings$ : {[key:string]: ReplaySubject<ProfileDocument>} = {}
 
-    static setCoverApp(grpId, rawId): Observable<string>{
+    static getProfileSettings$(groupId) {
 
-        Client.storage.covers[grpId] = `/ui/flux-runner/?id=${rawId}`
-        localStorage.setItem('network', JSON.stringify(Client.storage)) 
-        return Client.getCoverAppUrl(grpId)
+        if(!this.profileSettings$[groupId]){
+            this.profileSettings$[groupId] = new ReplaySubject<ProfileDocument>()
+
+            let profile : ProfileDocument = this.storage.profiles.find( (profile: ProfileDocument) => {
+                return profile.groupId == groupId
+            })
+            if(!profile){
+                let index = Math.floor(animalsEmojiList.length*Math.random())
+                Client.setProfile({groupId, title:'', icon:animalsEmojiList[index], coverApp:''})
+                return this.profileSettings$[groupId]
+            }
+            profile = { 
+                groupId,
+                title: profile?.title || '',
+                icon: profile?.icon || '',
+                coverApp: profile?.coverApp ||''
+            }
+            this.profileSettings$[groupId].next(profile)
+        }
+        return this.profileSettings$[groupId]
     }
 
-    static getCoverAppUrl(grpId) : Observable<string>{
+    static setProfile({groupId, title, icon, coverApp}) {
 
-        return of(Client.storage.covers[grpId])
+        this.storage.profiles = this.storage.profiles
+        .filter( d=> d.groupId != groupId)
+        .concat([{groupId, title, icon, coverApp}])
+        localStorage.setItem('network', JSON.stringify(Client.storage)) 
+        this.profileSettings$[groupId].next({groupId, title, icon, coverApp})
     }
 
     static getPosts$(groupId): Observable<Array<PostDocument>>{

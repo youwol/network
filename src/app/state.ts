@@ -24,7 +24,7 @@ export class AppState{
             this.user$.next(resp)
         )
         client.getGroups().pipe(
-            map( ({groups}) => groups.filter(grp => !grp.id.includes('private'))),
+            map( ({groups}) => groups),
             tap( (groups) => this.selectedGroup$.next(groups[0]))
         ).subscribe( grps => this.groups$.next(grps))
     }
