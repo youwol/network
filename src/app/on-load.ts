@@ -1,10 +1,12 @@
 require('./style.css');
 
-import { render } from '@youwol/flux-view';
+import { child$, render } from '@youwol/flux-view';
 import { createYouwolBanner } from './views/banner.view';
 import { AppState } from './state';
 import { sideBarView } from './views/sidebar.view';
 import { wallView } from './views/wall.view';
+import { discussionView } from './views/discussion/discussion.view';
+import { combineLatest } from 'rxjs';
 
 let appState = new AppState()
 
@@ -17,7 +19,11 @@ let vDOM = {
             style:{height:'0px'},
             children:[
                 sideBarView(appState),
-                wallView(appState)
+                wallView(appState),
+                child$(
+                    combineLatest([appState.selectedDiscussion$, appState.user$]),
+                    ([post, user]) => post ? discussionView(post, user, appState) : {}
+                )
             ]
         }
     ]

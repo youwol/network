@@ -2,14 +2,16 @@ import { child$, VirtualDOM } from "@youwol/flux-view";
 import { combineLatest } from "rxjs";
 import { AppState } from "../state";
 import { groupBannerView } from "./group-banner/group-banner.view";
+import { NewPostState } from "./new-post/models";
 import { newPostView } from "./new-post/new-post.view";
+import { postsView } from "./posts/posts.view";
 
 
 export function hRuleView(): VirtualDOM {
 
     return {
         tag: 'hr',
-        class: 'fv-color-primary mx-5'
+        class: 'fv-color-primary ml-3 mr-2'
     }
 }
 
@@ -24,11 +26,16 @@ export function wallView(appState: AppState): VirtualDOM {
                 appState.selectedGroup$,
                 (grp) => groupBannerView(grp, appState),
             ),
-            child$(
-                combineLatest([appState.selectedGroup$, appState.user$]),
-                ( [grp, user] ) => newPostView(grp, user) 
-            ),
-            hRuleView()
+            hRuleView(),
+            {
+                class:'pl-3 pt-3 pr-2',
+                children:[
+                    child$(
+                        combineLatest([appState.selectedGroup$, appState.user$]),
+                        ( [grp, user] ) => postsView(grp, user, appState) 
+                    )
+                ]
+            },
         ]
     }
 }
