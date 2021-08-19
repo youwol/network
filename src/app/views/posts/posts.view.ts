@@ -8,14 +8,14 @@ import { fluxAppView } from "../new-post/attach-flux.view";
 import { popupEmojisBrowserModal } from "../shared/emojis-browser.view";
 
 
-export function headerView(user): VirtualDOM {
-
+export function headerView(user, profile: ProfileDocument): VirtualDOM {
+    
     return {
         class:"border-bottom d-flex align-items-center",
         children:[
             {
                 style:{fontSize:'xx-large'},
-                innerText:'🦃'
+                innerText: profile.icon
             },
             {   class:'pl-3',
                 style:{
@@ -33,7 +33,7 @@ export function headerView(user): VirtualDOM {
                         style:{
                             fontStyle: 'oblique'
                         },
-                        innerText: "Software architect @ YouWol"
+                        innerText: profile.title
                     }
                 ]
             }
@@ -169,7 +169,7 @@ export function footerView(post: PostDocument, user, appState: AppState): Virtua
 
 export function postView(
     post: PostDocument, 
-    user: string, 
+    user, 
     extraActions,
     appState: AppState
     ): VirtualDOM {
@@ -183,7 +183,10 @@ export function postView(
                 class: 'fv-bg-background-alt rounded py-2 px-3 mt-2 fv-hover-color-focus flex-grow-1',
                 style:{position:'relative', width: '0px'},
                 children: [
-                    headerView(user),
+                    child$(
+                        Client.getProfileSettings$(user.groups[0].id),
+                        (profile: ProfileDocument) =>  headerView(user, profile)
+                    ),
                     contentView(post),
                     footerView(post, user, appState)
                 ]
@@ -207,12 +210,13 @@ export function postsView(group: GroupResponse, user: string, appState: AppState
         class: 'overflow-auto',
         children: childrenAppendOnly$(
             Client.getPosts$(group.id),
-            (post) => {
-                return postView(post, user, extraActions, appState)
-            },
+            (post) => postView(post, user, extraActions, appState),
             {
                 orderingIndex: (post: PostDocument) => -post.time
             }
-        )
+        ),
+        onscroll:() => {
+            console.log("Scroll down")
+        }
     }
 }
