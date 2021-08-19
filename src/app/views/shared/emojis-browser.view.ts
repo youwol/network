@@ -1,4 +1,7 @@
-import { VirtualDOM } from "@youwol/flux-view"
+import { render, VirtualDOM } from "@youwol/flux-view"
+import { Modal } from "@youwol/fv-group"
+import { merge } from "rxjs"
+
 
 
 export let emojiList = [
@@ -12,11 +15,11 @@ export let emojiList = [
 export function emojisIconView() : VirtualDOM{
 
     return {
-        tag: 'span',
-        class: 'fv-pointer rounded m-1',
-        innerText: '🙂'
+        tag: 'i',
+        class: 'fv-pointer rounded m-1 fas fa-smile'
     }
 }
+
 
 export function emojisExpandedView(insertedEmojis$ ) : VirtualDOM {
 
@@ -35,4 +38,26 @@ export function emojisExpandedView(insertedEmojis$ ) : VirtualDOM {
         style: { width: '250px', height: '250px' },
         children: icons
     }
+}
+
+
+export function popupEmojisBrowserModal(insertedEmojis$) {
+
+    let modalState = new Modal.State()
+    let modalView = new Modal.View({
+        state: modalState,
+        contentView: () => {
+            return emojisExpandedView(insertedEmojis$)
+        },
+        connectedCallback: (elem) => {
+            let sub = merge(modalState.cancel$, modalState.ok$, insertedEmojis$).subscribe( () =>{
+                modalDiv.remove()
+                insertedEmojis$.complete()
+            })
+            elem.ownSubscriptions(sub)
+        }
+    } as any)
+    let modalDiv = render(modalView)
+    document.querySelector("body").appendChild(modalDiv)
+    return modalState.ok$
 }
