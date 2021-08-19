@@ -7,6 +7,7 @@ import { newPostView } from "./new-post/new-post.view";
 import { postsView } from "./posts/posts.view";
 
 
+
 export function hRuleView(): VirtualDOM {
 
     return {
@@ -16,7 +17,8 @@ export function hRuleView(): VirtualDOM {
 }
 
 
-export function wallView(appState: AppState): VirtualDOM {
+export function wallView(grp, user, appState: AppState): VirtualDOM {
+
 
     return {
         class: 'flex-grow-1 overflow-auto fv-bg-background',onscroll:(ev) => {
@@ -27,27 +29,18 @@ export function wallView(appState: AppState): VirtualDOM {
         },
         style:{width:'0px'},
         children:[
-            child$(
-                appState.selectedGroup$,
-                (grp) => groupBannerView(grp, appState),
-            ),
+            groupBannerView(grp, user, appState),
             {
                 class:'pl-3 pt-3 pr-2',
                 children:[
-                    child$(
-                        combineLatest([appState.selectedGroup$, appState.user$]),
-                        ( [grp, user] ) => newPostView( new NewPostState(user, grp)) 
-                    )
+                    newPostView( new NewPostState(user, grp.id)) 
                 ]
             },
             hRuleView(),
             {
                 class:'pl-3 pt-3 pr-2',
                 children:[
-                    child$(
-                        combineLatest([appState.selectedGroup$, appState.user$]),
-                        ( [grp, user] ) => postsView(grp, user, appState) 
-                    )
+                    postsView(grp, user, appState) 
                 ]
             },
         ]

@@ -9,7 +9,6 @@ import { discussionView } from './views/discussion/discussion.view';
 import { combineLatest } from 'rxjs';
 
 let appState = new AppState()
-
 let vDOM = {
     class:'fv-bg-background fv-text-primary d-flex flex-column h-100',
     children:[
@@ -19,7 +18,10 @@ let vDOM = {
             style:{height:'0px'},
             children:[
                 sideBarView(appState),
-                wallView(appState),
+                child$(
+                    combineLatest([appState.selectedGroup$, appState.user$]),
+                    ([grp, user]) => wallView(grp, user, appState),
+                ),
                 child$(
                     combineLatest([appState.selectedDiscussion$, appState.user$]),
                     ([post, user]) => post ? discussionView(post, user, appState) : {}
