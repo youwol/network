@@ -15,7 +15,7 @@ export function templateView(
             state.renderMode$,
             (mode) => mode==RenderMode.Template ? 'd-block' : 'd-none',
             {wrapper: (d) => d + ' w-100 py-2 fv-bg-background-alt fv-text-primary fv-color-focus rounded px-4'}),
-        id:'template-div',
+        id: state.templateDivId,
         style :{
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word'

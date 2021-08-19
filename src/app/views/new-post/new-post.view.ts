@@ -4,15 +4,16 @@ import { Subject } from "rxjs";
 import { Client } from "../../client";
 import { AppState } from "../../state";
 import { attachFileExpandedView, attachFileIconView, fluxAppView } from "./attach-flux.view";
-import { emojisExpandedView, emojisIconView } from "./emojis.view";
+import { emojisExpandedView, emojisIconView } from "../shared/emojis-browser.view";
 import { ActionFooter, RenderMode, NewPostState } from "./models";
 import { templateView } from "./text-area.view";
+import { uuidv4 } from "@youwol/flux-core";
 
 
 export function actionsHeaderView(state: NewPostState): VirtualDOM {
 
     return {
-        class:' d-flex align-items-center',
+        class:' d-flex flex-column align-items-center',
         children: [
             {
                 tag:'i',
@@ -28,18 +29,17 @@ export function actionsHeaderView(state: NewPostState): VirtualDOM {
                  }
             },
             {
-                class:'ml-auto',
+                class:'',
                 children:[
                     {
                         tag:'i',
-                        class: 'fab fa-2x fa-telegram-plane fv-pointer rounded fv-text-success',
+                        class: 'fab fa-telegram-plane fa-2x fv-pointer rounded',
                         onclick: () => {
-                           Client.post({
-                               time: Date.now(),
-                               author: state.user,
-                               groupId: state.group.id,
-                               content: state.getContent()
-                           })      
+                            state.post({
+                                author: state.user.name,
+                                groupId: state.groupId,
+                                content: state.getContent()
+                            })     
                         }
                     }
                 ]
@@ -90,33 +90,43 @@ export function actionsFooterView(state: NewPostState): VirtualDOM {
 }
 
 
-export function newPostView(group: GroupResponse, userId: string): VirtualDOM {
-
-    let state = new NewPostState(userId, group)
+export function newPostView(
+    state: NewPostState
+    ): VirtualDOM {
 
     return {
-        class:'overflow-auto px-5 pt-2',
+        class:'overflow-auto ',
         children: [
-            actionsHeaderView(state),
-            {
-                class:'d-flex',
+            {   class:'d-flex',
+
                 children:[
-                    templateView(state),
+                    actionsHeaderView(state),
                     {
-                        id:'render-div',
-                        class: attr$(state.renderMode$,(mode) => mode==RenderMode.Template ? 'd-none' : 'd-block w-100')
+                        class:'flex-grow-1',
+                        style:{
+                            width:'0px'
+                        },
+                        children:[
+                            templateView(state),
+                            {
+                                id: state.renderDivId,
+                                class: attr$(
+                                    state.renderMode$,
+                                    (mode) => mode==RenderMode.Template ? 'd-none' : 'd-block w-100',
+                                    {wrapper: (d) => d + " fv-bg-background-alt rounded px-4 py-2"})
+                            },
+                            child$(
+                                state.renderMode$,
+                                (mode:RenderMode) => {
+                                    return mode == RenderMode.Template 
+                                        ? actionsFooterView(state)
+                                        : {}
+                                }
+                            )
+                        ]
                     }
                 ]
-            },
-            child$(
-                state.renderMode$,
-                (mode:RenderMode) => {
-                    return mode == RenderMode.Template 
-                        ? actionsFooterView(state)
-                        : {}
-                }
-            )
-            
+            },            
         ]
     }
 }

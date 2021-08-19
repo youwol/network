@@ -1,7 +1,9 @@
+import { uuidv4 } from "@youwol/flux-core"
 import { render } from "@youwol/flux-view"
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
 import { ExpandableGroup } from "@youwol/fv-group"
 import { BehaviorSubject, Subject } from "rxjs"
+import { Client } from "../../client"
 import { fluxAppView } from "./attach-flux.view"
 
 
@@ -16,13 +18,21 @@ export class NewPostState{
     insertedEmojis$ = new Subject<string>()
     insertedFluxApp$ = new Subject<any>()
     renderMode$ = new BehaviorSubject<RenderMode>(RenderMode.Template)
+    templateDivId: string
+    renderDivId : string
     
-    constructor(public readonly user, public readonly group: GroupResponse){
+    constructor(
+        public readonly user, 
+        public readonly groupId: string
+        ){
+        let uuid = uuidv4()
+        this.templateDivId = `template-div-${uuid}`
+        this.renderDivId = `render-div-${uuid}`
     }
 
     getContent(){
 
-        let nodeTemplate = document.getElementById("template-div") as HTMLDivElement
+        let nodeTemplate = document.getElementById(this.templateDivId) as HTMLDivElement
         let templateStr = ""
 
         Array.from(nodeTemplate.children).forEach( child => {
@@ -38,9 +48,10 @@ export class NewPostState{
     }
 
     toggleRender(){
+
         let templateStr = this.getContent()
 
-        let nodeView =  document.getElementById("render-div")
+        let nodeView =  document.getElementById(this.renderDivId)
         nodeView.innerHTML = window['marked'](templateStr);  
         window['MathJax']
         .typesetPromise([nodeView])
@@ -66,6 +77,10 @@ export class NewPostState{
 
     toggleTemplate(){     
         this.renderMode$.next(RenderMode.Template)
+    }
+
+    post(postData : { author, groupId, content}){
+        Client.post( { ...postData, ...{time: Date.now()} }) 
     }
 }
 
