@@ -26,6 +26,15 @@ export function wallView(appState: AppState): VirtualDOM {
                 appState.selectedGroup$,
                 (grp) => groupBannerView(grp, appState),
             ),
+            {
+                class:'pl-3 pt-3 pr-2',
+                children:[
+                    child$(
+                        combineLatest([appState.selectedGroup$, appState.user$]),
+                        ( [grp, user] ) => newPostView( new NewPostState(user, grp)) 
+                    )
+                ]
+            },
             hRuleView(),
             {
                 class:'pl-3 pt-3 pr-2',
