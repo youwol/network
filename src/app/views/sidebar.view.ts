@@ -1,5 +1,4 @@
 import { attr$, child$, VirtualDOM } from "@youwol/flux-view";
-import { tap } from "rxjs/operators";
 import { AppState } from "../state";
 
 
