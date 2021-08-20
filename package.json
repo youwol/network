@@ -1,6 +1,6 @@
 {
     "name": "@youwol/network",
-    "version": "0.0.0-next",
+    "version": "0.0.1",
     "description": "YouWol network application",
     "author": "greinisch@youwol.com",
     "main": "dist/index.html",
@@ -13,7 +13,7 @@
         "doc": "typedoc src/ --exclude src/index.ts --exclude src/tests --out dist/docs --theme default",
         "start": "webpack serve",
         "upgrade-youwol": "yarn upgrade @youwol/cdn-client @youwol/flux-core @youwol/flux-view",
-        "publish-npm-public": "yarn build:prod && yarn test-coverage && yarn publish --access public"
+		"publish-npm-gitlab": "yarn version --no-git-tag-version --no-commit-hooks && npm publish"
     },
     "license": "MIT",
     "dependencies": {
@@ -64,5 +64,10 @@
             "lodash": "4.x",
             "rxjs": "6.x"
         }
-    }
+    },
+	"publishConfig": {
+	   "@youwol:registry":"https://gitlab.com/api/v4/projects/15166395/packages/npm/"
+	}
+    
+
 }
