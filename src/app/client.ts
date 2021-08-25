@@ -1,11 +1,11 @@
-import { uuidv4 } from "@youwol/flux-core";
+import { createObservableFromFetch } from "@youwol/flux-core";
 import { Observable, ReplaySubject } from "rxjs";
-import { animalsEmojiList } from "./views/shared/emojis-browser.view";
 import * as _ from 'lodash'
+import { tap } from "rxjs/operators";
 
 
 export interface PostDocument{
-    id: string
+    postId: string
     time: number
     author: string
     groupId: string
@@ -13,7 +13,7 @@ export interface PostDocument{
 }
 
 export interface CommentDocument extends PostDocument{
-    postId: string
+    parentPostId: string
 }
 
 export interface EmojiDocument{
@@ -33,7 +33,10 @@ export interface ProfileDocument{
 
 export class Client{
 
-    static FETCH_COUNT = 5
+    static urlNetworkBackend = "/api/network-backend"
+    static INITIAL_FETCH_COUNT = 10
+    static INCREMENTAL_FETCH_COUNT = 5
+
     static storage = localStorage.getItem('network') 
         ? JSON.parse(localStorage.getItem('network')):
         {
@@ -52,119 +55,137 @@ export class Client{
 
     static getProfileSettings$(groupId) {
 
-        if(!this.profileSettings$[groupId]){
-            this.profileSettings$[groupId] = new ReplaySubject<ProfileDocument>()
+        if(!Client.profileSettings$[groupId]){
+            Client.profileSettings$[groupId] = new ReplaySubject<ProfileDocument>()
 
-            let profile : ProfileDocument = this.storage.profiles.find( (profile: ProfileDocument) => {
-                return profile.groupId == groupId
+            let request = new Request(`${Client.urlNetworkBackend}/groups/${groupId}`)
+            fetch(request).then( resp => resp.json()).then( (profile) => {
+                Client.profileSettings$[groupId].next(profile)
             })
-            if(!profile){
-                let index = Math.floor(animalsEmojiList.length*Math.random())
-                Client.setProfile({groupId, title:'', icon:animalsEmojiList[index], coverApp:''})
-                return this.profileSettings$[groupId]
-            }
-            profile = { 
-                groupId,
-                title: profile?.title || '',
-                icon: profile?.icon || '',
-                coverApp: profile?.coverApp ||''
-            }
-            this.profileSettings$[groupId].next(profile)
         }
-        return this.profileSettings$[groupId]
+        return Client.profileSettings$[groupId]
     }
 
     static setProfile({groupId, title, icon, coverApp}) {
 
-        this.storage.profiles = this.storage.profiles
-        .filter( d=> d.groupId != groupId)
-        .concat([{groupId, title, icon, coverApp}])
-        localStorage.setItem('network', JSON.stringify(Client.storage)) 
-        this.profileSettings$[groupId].next({groupId, title, icon, coverApp})
+        let body = {
+            displayName: groupId,
+            title,
+            icon,
+            coverApp
+        }
+        let request = new Request(
+            `${Client.urlNetworkBackend}/groups/${groupId}`, 
+            {method:'PUT', body:JSON.stringify(body)})
+
+        fetch(request).then( resp => resp.json()).then( (profile) => {
+            this.profileSettings$[groupId].next(profile)
+        })
     }
 
     static getPosts$(groupId: string): Observable<Array<PostDocument>>{
 
-        if(!this.posts$[groupId]){
-            this.posts$[groupId] = new ReplaySubject<PostDocument[]>()
-
-            let posts = this.storage.posts.filter( (post: PostDocument) => {
-                return post.groupId == groupId
+        if(!Client.posts$[groupId]){
+            Client.posts$[groupId] = new ReplaySubject<PostDocument[]>()
+            let body = {
+                count: Client.INITIAL_FETCH_COUNT
+            }
+            let request = new Request(
+                `${Client.urlNetworkBackend}/query/groups/${groupId}/posts`,
+                { method: 'POST', body: JSON.stringify(body)}
+                )
+            fetch(request).then( resp => resp.json()).then( ({posts}) => {
+                if(posts.length>0)
+                    Client.lastTime[groupId] = _.last(posts).time - 1
+                Client.posts$[groupId].next(posts)
             })
-            if( posts.length == 0)
-                return this.posts$[groupId]
-            posts.sort( (lhs, rhs) => lhs.time > rhs.time)
-            posts = posts.slice(0,Client.FETCH_COUNT)
-            this.lastTime[groupId] = _.last(posts).time
-            this.posts$[groupId].next(posts.slice(0,Client.FETCH_COUNT))
         }
         return this.posts$[groupId]
     }
 
     static getMorePosts(groupId: string) {
-
-        let posts = this.storage.posts.filter( (post: PostDocument) => {
-            return post.groupId == groupId && post.time < this.lastTime[groupId]
+        let body = {
+            count: Client.INCREMENTAL_FETCH_COUNT,
+            fromTime:Client.lastTime[groupId]
+        }
+        let request = new Request(
+            `${Client.urlNetworkBackend}/query/groups/${groupId}/posts`,
+            { method: 'POST', body: JSON.stringify(body)}
+            )
+        fetch(request).then( resp => resp.json()).then( ({posts}) => {
+            if(posts.length>0)
+                Client.lastTime[groupId] = _.last(posts).time - 1
+            Client.posts$[groupId].next(posts)
         })
-        posts.sort( (lhs, rhs) => lhs.time > rhs.time)
-        posts = posts.slice(0,Client.FETCH_COUNT)
-        if(posts.length==0)
-            return 
-        this.lastTime[groupId] = _.last(posts).time
-        this.posts$[groupId].next(posts.slice(0,Client.FETCH_COUNT))
     }
 
-    static post({author,groupId,content}){
-        let postId = uuidv4()
-        let time = Date.now()
-        this.storage.posts.unshift({time,author,groupId,content, id: postId});
-        localStorage.setItem('network', JSON.stringify(Client.storage)) 
-        this.posts$[groupId].next([{id:postId, time,author,groupId,content}])
+    static post$({author,groupId,content}){
+
+        let body = {
+            content
+        }
+        let request = new Request(
+            `${Client.urlNetworkBackend}/groups/${groupId}/posts`,
+            { method: 'POST', body: JSON.stringify(body)}
+            )
+        return createObservableFromFetch(request).pipe(
+            tap(({postId, time, author, groupId, content}) => {
+                this.posts$[groupId].next([{postId, time, author,groupId,content}])
+            })
+        )
     }
 
-    static getEmojis$(postId: string) {
+    static getEmojis$(groupId: string, postId: string) {
 
         if(!this.emoji$[postId]){
             this.emoji$[postId] = new ReplaySubject<EmojiDocument[]>()
-
-            let emojis = this.storage.emojis.filter( (emoji: EmojiDocument) => {
-                return emoji.postId == postId
+            let request = new Request(
+                `${Client.urlNetworkBackend}/groups/${groupId}/posts/${postId}/emojis`
+                )
+            fetch(request).then( resp => resp.json()).then( ({emojis}) => {
+                this.emoji$[postId].next(emojis)
             })
-            this.emoji$[postId].next(emojis)
         }
         return this.emoji$[postId]
     }
 
-    static postEmoji(postId: string, emoji: string, userId: string){
-
-        let doc : EmojiDocument = {postId, userId, emoji} 
-        this.storage.emojis.push(doc)
-        localStorage.setItem('network', JSON.stringify(Client.storage)) 
-        this.emoji$[postId].next([doc])
-
+    static postEmoji(groupId: string, postId: string, emoji: string, userId: string){
+        let request = new Request(
+            `${Client.urlNetworkBackend}/groups/${groupId}/posts/${postId}/emojis/${emoji}`,
+            { method: 'PUT' }
+            )
+        fetch(request).then( resp => resp.json()).then( ({emojis}) => {
+            this.emoji$[postId].next(emojis)
+        })
     }
 
-    static getComment$(postId: string) {
+    static getComment$(groupId: string, postId: string) {
 
         if(!this.comment$[postId]){
             this.comment$[postId] = new ReplaySubject<CommentDocument[]>()
-
-            let comments = this.storage.comments
-            .filter( (comment: CommentDocument) => {
-                return comment.postId == postId
+            let request = new Request(
+                `${Client.urlNetworkBackend}/groups/${groupId}/posts/${postId}/discussions`
+                )
+            fetch(request).then( resp => resp.json()).then( ({posts}) => {
+                this.comment$[postId].next(posts)
             })
-            comments.sort( (c0,c1) => c0.time - c1.time)
-            this.comment$[postId].next(comments)
         }
         return this.comment$[postId]
     }
 
-    static postComment({postId, content, userId, groupId} : {postId: string, content: string, userId: string, groupId: string}){
+    static postComment$({postId, content, userId, groupId} : {postId: string, content: string, userId: string, groupId: string}){
 
-        let id = uuidv4()
-        let doc : CommentDocument = {id, groupId, postId, author: userId, content, time: Date.now()} 
-        this.storage.comments.push(doc)
-        localStorage.setItem('network', JSON.stringify(Client.storage)) 
-        this.comment$[postId].next([doc])
+        let body = {
+            content
+        }
+        let request = new Request(
+            `${Client.urlNetworkBackend}/groups/${groupId}/posts/${postId}/discussions`,
+            { method: 'POST', body: JSON.stringify(body)}
+            )
+        return createObservableFromFetch(request).pipe(
+            tap(({postId, parentPostId, time, author, groupId, content}) => {
+                this.comment$[parentPostId].next([{postId, parentPostId, time, author,groupId,content}])
+            })
+        )
     }
 }

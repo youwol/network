@@ -15,18 +15,15 @@ export class AppState{
     user$ = new ReplaySubject<any>(1)
 
     constructor(){
-        let client = new AssetsGatewayClient()
 
         let requestUserInfo = new Request(
             `/api/assets-gateway/user-info`
         );
-        createObservableFromFetch( requestUserInfo).subscribe( resp => 
+        createObservableFromFetch( requestUserInfo).subscribe( resp => {
             this.user$.next(resp)
-        )
-        client.getGroups().pipe(
-            map( ({groups}) => groups),
-            tap( (groups) => this.selectedGroup$.next(groups[0]))
-        ).subscribe( grps => this.groups$.next(grps))
+            this.groups$.next(resp.groups)
+            this.selectedGroup$.next(resp.groups[0])
+        })
     }
 
     selectGroup(grpId: string){

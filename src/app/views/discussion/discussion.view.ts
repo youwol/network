@@ -34,7 +34,7 @@ export function commentsListView(seedingPost: PostDocument, user, appState:AppSt
         class: '',
         style:{height:'0px'},
         children: childrenAppendOnly$(
-            Client.getComment$(seedingPost.id),
+            Client.getComment$(seedingPost.groupId, seedingPost.postId),
             (comment) => {
                 return postView(comment, user, [], appState)
             },

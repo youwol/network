@@ -1,8 +1,8 @@
-import { child$, children$, childrenAppendOnly$, HTMLElement$, render, VirtualDOM } from "@youwol/flux-view"
+import { child$, childrenAppendOnly$, HTMLElement$, render, VirtualDOM } from "@youwol/flux-view"
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
 import { Subject } from "rxjs";
 import { filter, scan } from "rxjs/operators";
-import { Client, EmojiDocument, PostDocument, ProfileDocument } from "../../client"
+import { Client, PostDocument, ProfileDocument } from "../../client"
 import { AppState } from "../../state";
 import { fluxAppView } from "../new-post/attach-flux.view";
 import { popupEmojisBrowserModal } from "../shared/emojis-browser.view";
@@ -83,7 +83,7 @@ export function leftMenuView(
                 onclick: () => {
                     let emoji$ = new Subject()
                     emoji$.subscribe( (emoji: string) => {
-                        Client.postEmoji(post.id, emoji, user.name)
+                        Client.postEmoji(post.groupId, post.postId, emoji, user.name)
                     })
                     popupEmojisBrowserModal(emoji$)
                 }
@@ -105,42 +105,36 @@ export function footerView(post: PostDocument, user, appState: AppState): Virtua
     return {
         class: 'd-flex align-items-center w-100 border-top',
         children:[
-            {
-                class:'d-flex',
-                style:{
-                    'font-size': 'smaller'
-                },
-                children: children$(
-                    Client.getEmojis$(post.id).pipe(
-                        scan( (store, docs) => {
-                            docs.forEach( (doc: EmojiDocument) => {
-                                let count = store.has(doc.emoji) ? store.get(doc.emoji) + 1 : 1
-                                store.set(doc.emoji,count)
-                            })
-                            return store
-                        }, new Map<string,  number>())
-                    ),
-                    (store: Map<string,  number> ) => {
-                        return Array.from(store.entries()).map( ([emoji, count]: [string, number] ) => {
-                            return {
-                                class:'d-flex rounded-circle p-1 mt-1 mr-1 border fv-pointer fv-bg-background fv-hover-text-focus',
-                                children:[
-                                    {
-                                        innerText:emoji
-                                    },
-                                    {
-                                        class:'pl-1',
-                                        innerText:count
-                                    }
-                                ],
-                                onclick:() => Client.postEmoji(post.id, emoji, user.name)
-                            }
-                        })
-                    }
-                )
-            },
             child$(
-                Client.getComment$(post.id).pipe( 
+                Client.getEmojis$(post.groupId, post.postId),
+                (emojis) => {
+                    return {
+                        class:'d-flex',
+                        style:{
+                            'font-size': 'smaller'
+                        },
+                        children:
+                            Object.entries(emojis).map( ([emoji, users]:[string, Array<unknown>]) => {
+                                return { 
+                                    class:'d-flex rounded-circle p-1 mt-1 mr-1 border fv-pointer fv-bg-background fv-hover-text-focus',
+                                    children:[
+                                        {
+                                            innerText:emoji
+                                        },
+                                        {
+                                            class:'pl-1',
+                                            innerText:users.length
+                                        }
+                                    ],
+                                    onclick:() => Client.postEmoji(post.groupId, post.postId, emoji, user.name) 
+                                }
+                            })
+                                                       
+                        }
+                    }
+                ),
+            child$(
+                Client.getComment$(post.groupId, post.postId).pipe( 
                     scan( (acc,e) =>  acc + e.length , 0),
                     filter( count => count > 0)
                     ),
