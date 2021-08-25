@@ -53,6 +53,7 @@ module.exports = {
           "@youwol/flux-files": "window['@youwol/flux-files']",
           "@youwol/fv-group": "window['@youwol/fv-group']",
           "@youwol/fv-input": "window['@youwol/fv-input']",
+          "@youwol/fv-tree": "window['@youwol/fv-tree']",
           "@youwol/flux-youwol-essentials": "window['@youwol/flux-youwol-essentials']",
         }
       ],
