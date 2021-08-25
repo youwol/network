@@ -1,33 +1,34 @@
-
-// Following import is to include style.css in the dist directory (using MiniCssExtractPlugin)
-// (index.html is handled by HtmlWebpackPlugin)
-
-import { fetchBundles, fetchStyleSheets } from '@youwol/cdn-client';
-export{}
-
 require('./style.css');
 
-await Promise.all([
-    fetchStyleSheets([
-        "bootstrap#4.4.1~bootstrap.min.css",
-        "fontawesome#5.12.1~css/all.min.css",
-        "@youwol/fv-widgets#0.0.3~dist/assets/styles/style.youwol.css"
-    ]),
-    fetchBundles({
-        'lodash': '4.17.15',
-        "grapes": '0.16.2',
-        "rxjs": '6.5.5',
-        "@youwol/flux-core": 'latest',
-        '@youwol/flux-youwol-essentials': 'latest',
-        "@youwol/fv-group": 'latest',
-        '@youwol/flux-view': 'latest',
-        '@youwol/flux-files': 'latest',        
-        'mathjax': 'latest',        
-        'marked': 'latest'
-        },
-        window
-    )
-    ])
+import { child$, render } from '@youwol/flux-view';
+import { createYouwolBanner } from './views/banner.view';
+import { AppState } from './state';
+import { sideBarView } from './views/sidebar.view';
+import { wallView } from './views/wall.view';
+import { discussionView } from './views/discussion/discussion.view';
+import { combineLatest } from 'rxjs';
 
-await import('./on-load')
+let appState = new AppState()
+let vDOM = {
+    class:'fv-bg-background fv-text-primary d-flex flex-column h-100',
+    children:[
+        createYouwolBanner(),
+        {
+            class:'d-flex flex-grow-1',
+            style:{height:'0px'},
+            children:[
+                sideBarView(appState),
+                child$(
+                    combineLatest([appState.selectedGroup$, appState.user$]),
+                    ([grp, user]) => wallView(grp, user, appState),
+                ),
+                child$(
+                    combineLatest([appState.selectedDiscussion$, appState.user$]),
+                    ([post, user]) => post ? discussionView(post, user, appState) : {}
+                )
+            ]
+        }
+    ]
+}
 
+document.getElementById("content").appendChild(render(vDOM))
