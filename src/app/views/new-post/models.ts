@@ -78,9 +78,14 @@ export class NewPostState{
     }
 
     post(postData : { author, groupId, content}){
-        Client.post( postData ) 
-        document.getElementById(this.templateDivId).innerHTML = ""
+        Client.post$( postData ).subscribe( () =>{
+            this.clearTemplate()
+        })
         this.toggleTemplate()
+    }
+
+    clearTemplate(){
+        document.getElementById(this.templateDivId).innerHTML = "<p><br></p>" 
     }
 }
 

@@ -13,7 +13,9 @@ class NewCommentState extends NewPostState{
     }
 
     post( {author, groupId, content} : { author: string, groupId: string, content: string}){
-        Client.postComment( {postId: this.seedPost.id, content, groupId, userId: author}) 
+        Client.postComment$( {postId: this.seedPost.postId, content, groupId, userId: author}).subscribe( () =>
+            this.clearTemplate()
+        )
     }
 }
 
