@@ -1,9 +1,10 @@
 import { attr$, child$, VirtualDOM } from "@youwol/flux-view";
 import { Subject } from "rxjs";
-import { attachFileExpandedView, attachFileIconView } from "./attach-flux.view";
-import { emojisExpandedView, emojisIconView } from "../shared/emojis-browser.view";
+import { attachFileIconView } from "./attach-flux.view";
+import { emojisIconView, popupEmojisBrowserModal } from "../modals/emojis-browser.view";
 import { ActionFooter, RenderMode, NewPostState } from "./models";
 import { templateView } from "./text-area.view";
+import { popupWorkspaceBrowserModal } from "../modals/workspace-browser.view";
 
 
 export function actionsHeaderView(state: NewPostState): VirtualDOM {
@@ -54,8 +55,8 @@ export function actionsFooterView(state: NewPostState): VirtualDOM {
     }
     let expandedFactory = {
         [ActionFooter.None]: () => ({}),
-        [ActionFooter.Emoji]: () => emojisExpandedView(state.insertedEmojis$),
-        [ActionFooter.AttachFile]: () => attachFileExpandedView(state.insertedFluxApp$),
+        [ActionFooter.Emoji]: () => popupEmojisBrowserModal(state.insertedEmojis$),
+        [ActionFooter.AttachFile]: () => popupWorkspaceBrowserModal(state.insertedFluxApp$),
     }
     return {
         children: [

@@ -2,7 +2,7 @@ import { attr$, child$, VirtualDOM } from "@youwol/flux-view"
 import { Interfaces } from "@youwol/flux-files"
 import { BehaviorSubject, combineLatest, Subject } from "rxjs"
 import { ExpandableGroup } from "@youwol/fv-group"
-import { workspaceBrowserView } from "../shared/workspace-browser.view"
+import { workspaceBrowserView } from "../modals/workspace-browser.view"
 
 
 

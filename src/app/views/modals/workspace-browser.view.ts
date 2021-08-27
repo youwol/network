@@ -5,6 +5,7 @@ import { Modal } from "@youwol/fv-group"
 import { ImmutableTree } from "@youwol/fv-tree"
 import { merge, Observable, ReplaySubject, Subject } from "rxjs"
 import { filter, map } from "rxjs/operators"
+import { modalView } from "./modal.view"
 
 
 
@@ -101,23 +102,9 @@ function treeItemView(state: ExplorerState, node: ModuleExplorer.Node) {
 
 export function popupWorkspaceBrowserModal(file$: Subject<Interfaces.File>) {
 
-    let modalState = new Modal.State()
-    let modalView = new Modal.View({
-        state: modalState,
-        contentView: () => {
-            return workspaceBrowserView(file$)
-        },
-        connectedCallback: (elem) => {
-            let sub = merge(modalState.cancel$, modalState.ok$, file$ ).subscribe( () =>{
-                modalDiv.remove()
-                file$.complete()
-            })
-            elem.ownSubscriptions(sub)
-        }
-    } as any)
-    let modalDiv = render(modalView)
-    document.querySelector("body").appendChild(modalDiv)
-    return modalState.ok$
+
+    let view = modalView(file$, workspaceBrowserView(file$))
+    return view.state.ok$
 }
 
 export function workspaceBrowserView(file$: Subject<Interfaces.File>): VirtualDOM {
