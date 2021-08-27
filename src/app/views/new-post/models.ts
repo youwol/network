@@ -19,6 +19,10 @@ export class NewPostState{
     templateDivId: string
     renderDivId : string
 
+    currentNode : HTMLElement = undefined
+    currentPosition = 0
+
+
     constructor(
         public readonly user, 
         public readonly groupId: string
@@ -26,6 +30,13 @@ export class NewPostState{
         let uuid = uuidv4()
         this.templateDivId = `template-div-${uuid}`
         this.renderDivId = `render-div-${uuid}`
+    }
+
+    setCursor(){
+        setTimeout( () => {
+            this.currentNode =  window.getSelection()['baseNode']
+            this.currentPosition =  window.getSelection().getRangeAt(0).startOffset
+        }, 0);
     }
 
     getContent(){
