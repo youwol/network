@@ -4,10 +4,18 @@ import * as _ from 'lodash'
 import { tap } from "rxjs/operators";
 
 
+export interface GroupInfo{
+    displayName: string
+    groupId: string
+    icon: string
+    title: string
+    coverApp: string
+}
+
 export interface PostDocument{
     postId: string
     time: number
-    author: string
+    authorInfo: GroupInfo
     groupId: string
     content: string
 }
@@ -21,14 +29,6 @@ export interface EmojiDocument{
     postId: string
     userId: string
 }
-
-export interface ProfileDocument{
-    groupId: string
-    title: string
-    icon: string
-    coverApp: string
-}
-
 
 
 export class Client{
@@ -51,12 +51,12 @@ export class Client{
     static lastTime : {[key:string]: number} = {}
     static emoji$ : {[key:string]: ReplaySubject<EmojiDocument[]>} = {}
     static comment$ : {[key:string]: ReplaySubject<CommentDocument[]>} = {}
-    static profileSettings$ : {[key:string]: ReplaySubject<ProfileDocument>} = {}
+    static profileSettings$ : {[key:string]: ReplaySubject<GroupInfo>} = {}
 
     static getProfileSettings$(groupId) {
 
         if(!Client.profileSettings$[groupId]){
-            Client.profileSettings$[groupId] = new ReplaySubject<ProfileDocument>()
+            Client.profileSettings$[groupId] = new ReplaySubject<GroupInfo>()
 
             let request = new Request(`${Client.urlNetworkBackend}/groups/${groupId}`)
             fetch(request).then( resp => resp.json()).then( (profile) => {
@@ -66,10 +66,10 @@ export class Client{
         return Client.profileSettings$[groupId]
     }
 
-    static setProfile({groupId, title, icon, coverApp}) {
+    static setProfile({groupId, displayName, title, icon, coverApp}) {
 
         let body = {
-            displayName: groupId,
+            displayName,
             title,
             icon,
             coverApp
@@ -129,8 +129,8 @@ export class Client{
             { method: 'POST', body: JSON.stringify(body)}
             )
         return createObservableFromFetch(request).pipe(
-            tap(({postId, time, author, groupId, content}) => {
-                this.posts$[groupId].next([{postId, time, author,groupId,content}])
+            tap(({postId, time, authorInfo, groupId, content}) => {
+                this.posts$[groupId].next([{postId, time, authorInfo,groupId,content}])
             })
         )
     }
@@ -183,8 +183,8 @@ export class Client{
             { method: 'POST', body: JSON.stringify(body)}
             )
         return createObservableFromFetch(request).pipe(
-            tap(({postId, parentPostId, time, author, groupId, content}) => {
-                this.comment$[parentPostId].next([{postId, parentPostId, time, author,groupId,content}])
+            tap(({postId, parentPostId, time, authorInfo, groupId, content}) => {
+                this.comment$[parentPostId].next([{postId, parentPostId, time, authorInfo,groupId,content}])
             })
         )
     }

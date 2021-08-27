@@ -2,12 +2,12 @@ import { Interfaces } from "@youwol/flux-files"
 import { attr$, child$, HTMLElement$, VirtualDOM } from "@youwol/flux-view"
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
 import { ExpandableGroup } from "@youwol/fv-group"
-import { BehaviorSubject, Observable, ReplaySubject, Subject } from "rxjs"
+import { BehaviorSubject, Observable, Subject } from "rxjs"
 import { filter, map } from "rxjs/operators"
-import { Client, ProfileDocument } from "../../client"
+import { Client, GroupInfo, } from "../../client"
 import { AppState } from "../../state"
-import { popupEmojisBrowserModal } from "../shared/emojis-browser.view"
-import { popupWorkspaceBrowserModal } from "../shared/workspace-browser.view"
+import { popupEmojisBrowserModal } from "../modals/emojis-browser.view"
+import { popupWorkspaceBrowserModal } from "../modals/workspace-browser.view"
 
 
 
@@ -51,35 +51,35 @@ export function profileView(group, user): VirtualDOM {
             ]
         }
     }
-    let titleView = (titleEdition$, settings) => {
+    let inputView = (labelContent: string, propertyName: string, edition$, settings) => {
         return {
             class: 'd-flex align-items-center',
             children: [
                 {
                     tag: 'span',
                     style: { width: '150px' },
-                    innerText: 'title'
+                    innerText: labelContent
                 },
                 child$(
-                    titleEdition$,
+                    edition$,
                     (editing) => editing
                         ? {
                             tag: 'input', type:'text',
-                            value: settings.title,
+                            value: settings[propertyName],
                             onchange: (ev) => {
-                                Client.setProfile({groupId: group.id, title: ev.target.value, icon: settings.icon,
-                                    coverApp:settings.coverApp})
+                                let profile = {...settings, ...{[propertyName]:ev.target.value}}
+                                Client.setProfile(profile)
                             }
                         } :
                         {
                             tag: 'span',
-                            innerText: settings.title
+                            innerText: settings[propertyName]
                         }
                 ),
                 {
                     tag:'i',
                     class:'fas fa-pen fv-hover-text-focus fv-pointer ml-2',
-                    onclick: () => titleEdition$.next(true)
+                    onclick: () => edition$.next(true)
                 }
             ]
         }
@@ -94,23 +94,21 @@ export function profileView(group, user): VirtualDOM {
                 children: [
                     child$(
                         Client.getProfileSettings$(group.id),
-                        (settings: ProfileDocument) => {
-                            let name = group.id.includes('private')
-                                ? user.name
-                                : group.path
+                        (settings: GroupInfo) => {
                             let insertedEmojis$ = new Subject()
                             let coverApp$ = new Subject<Interfaces.File>()
+                            let nameEdition$ = new BehaviorSubject(false)
                             let titleEdition$ = new BehaviorSubject(false)
                             return {
                                 children:[
                                     rowView('id', group.id),
-                                    rowView('name', name),
+                                    inputView("name", "displayName", nameEdition$, settings),
                                     rowView('icon', settings.icon, {
                                         tag:'i',
                                         class:'fas fa-pen fv-hover-text-focus fv-pointer ml-2',
                                         onclick: () => popupEmojisBrowserModal(insertedEmojis$)
                                     }),
-                                    titleView(titleEdition$, settings),
+                                    inputView("title", "title", titleEdition$, settings),
                                     rowView('cover app.', settings.coverApp, {
                                         tag:'i',
                                         class:'fas fa-pen fv-hover-text-focus fv-pointer ml-2',
@@ -119,12 +117,12 @@ export function profileView(group, user): VirtualDOM {
                                 ],
                                 connectedCallback: (elem: HTMLElement$) => {
                                     let sub0 = insertedEmojis$.subscribe( (emoji) => {
-                                        Client.setProfile({groupId: group.id, title: settings.title, icon: emoji,
-                                            coverApp:settings.coverApp})
+                                        let profile = {...settings, ...{icon:emoji}}
+                                        Client.setProfile(profile)
                                     })
                                     let sub1 = coverApp$.subscribe( (file) => {
-                                        Client.setProfile({groupId: group.id, title: settings.title, icon: settings.icon,
-                                            coverApp:`/ui/flux-runner/?id=${file['metadata'].rawId}`})
+                                        let profile = {...settings, ...{coverApp:`/ui/flux-runner/?id=${file['metadata'].rawId}`}}
+                                        Client.setProfile(profile)
                                     })
                                     elem.ownSubscriptions(sub0, sub1)
                                 }
@@ -183,7 +181,7 @@ export function actionsFooterView(bannerState: BannerState): VirtualDOM {
 }
 
 
-export function coverView(groupId): VirtualDOM {
+export function coverView(src): VirtualDOM {
 
     return {
         class: 'w-100  overflow-auto',
@@ -197,13 +195,7 @@ export function coverView(groupId): VirtualDOM {
             title: '',
             width: '100%',
             height: '100%',
-            src: attr$(
-                Client.getProfileSettings$(groupId).pipe(
-                    map( d => d.coverApp),
-                    filter( d => d!="")
-                ),
-                (url) => url
-            )
+            src
         }
         ]
     }
@@ -212,24 +204,34 @@ export function coverView(groupId): VirtualDOM {
 export function groupBannerView(group: GroupResponse, user, appState: AppState): VirtualDOM {
 
     let bannerState = new BannerState(group.id)
-
+    let coverApp$ = Client.getProfileSettings$(group.id).pipe(
+        map( d => d.coverApp),
+        filter( d => d!="")
+    )
     return {
         children: [
             profileView(group, user),
-            {
-                style: {
-                    position: 'relative', aspectRatio: `${BannerState.aspectRatio}`,
-                },
-                class: 'd-flex justify-content-between fv-text-focus flex-column w-100',
-                children: [
-                    {
-                        class: 'mx-auto',
-                        innerText: group.path
-                    },
-                    coverView(group.id),
-                    actionsFooterView(bannerState)
-                ]
-            }
+            child$( 
+                coverApp$,
+                (src) => ({
+                    children:[
+                        {
+                            style: {
+                                position: 'relative', aspectRatio: `${BannerState.aspectRatio}`,
+                            },
+                            class: 'd-flex justify-content-between fv-text-focus flex-column w-100',
+                            children: [
+                                {
+                                    class: 'mx-auto',
+                                    innerText: group.path
+                                },
+                                coverView(src),
+                                actionsFooterView(bannerState)
+                            ]
+                        }
+                    ]
+                })
+            )
         ]
     }
 }
