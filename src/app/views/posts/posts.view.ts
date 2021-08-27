@@ -2,20 +2,20 @@ import { child$, childrenAppendOnly$, HTMLElement$, render, VirtualDOM } from "@
 import { GroupResponse } from "@youwol/flux-youwol-essentials"
 import { Subject } from "rxjs";
 import { filter, scan } from "rxjs/operators";
-import { Client, PostDocument, ProfileDocument } from "../../client"
+import { Client, GroupInfo, PostDocument } from "../../client"
 import { AppState } from "../../state";
 import { fluxAppView } from "../new-post/attach-flux.view";
-import { popupEmojisBrowserModal } from "../shared/emojis-browser.view";
+import { popupEmojisBrowserModal } from "../modals/emojis-browser.view";
 
 
-export function headerView(user, profile: ProfileDocument): VirtualDOM {
+export function headerView( groupInfo: GroupInfo): VirtualDOM {
     
     return {
         class:"border-bottom d-flex align-items-center",
         children:[
             {
                 style:{fontSize:'xx-large'},
-                innerText: profile.icon
+                innerText: groupInfo.icon
             },
             {   class:'pl-3',
                 style:{
@@ -27,13 +27,13 @@ export function headerView(user, profile: ProfileDocument): VirtualDOM {
                             fontSize: 'large',
                             fontWeight: 'bolder'
                         },
-                        innerText: user.name
+                        innerText: groupInfo.displayName
                     },
                     {   
                         style:{
                             fontStyle: 'oblique'
                         },
-                        innerText: profile.title
+                        innerText: groupInfo.title
                     }
                 ]
             }
@@ -178,8 +178,8 @@ export function postView(
                 style:{position:'relative', width: '0px'},
                 children: [
                     child$(
-                        Client.getProfileSettings$(user.groups[0].id),
-                        (profile: ProfileDocument) =>  headerView(user, profile)
+                        Client.getProfileSettings$(post.authorInfo.groupId),
+                        (groupInfo: GroupInfo) =>  headerView(groupInfo)
                     ),
                     contentView(post),
                     footerView(post, user, appState)
