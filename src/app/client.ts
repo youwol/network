@@ -1,7 +1,7 @@
 import { createObservableFromFetch } from "@youwol/flux-core";
 import { Observable, ReplaySubject } from "rxjs";
 import * as _ from 'lodash'
-import { tap } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 
 
 export interface GroupInfo{
@@ -186,6 +186,15 @@ export class Client{
             tap(({postId, parentPostId, time, authorInfo, groupId, content}) => {
                 this.comment$[parentPostId].next([{postId, parentPostId, time, authorInfo,groupId,content}])
             })
+        )
+    }
+
+    static emojisList$(category){
+        let request = new Request(
+            `${Client.urlNetworkBackend}/emojis/${category}`
+            )
+        return createObservableFromFetch(request).pipe(
+            map( (resp:any) => resp.emojis)
         )
     }
 }
